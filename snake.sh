@@ -54,7 +54,7 @@ elif (( blockX < 1 )); then
 fi
 
 block="$blockY;$blockX"
-printf '\e[%sH\e[41m \e[m' "${block[0]}"
+printf '\e[%sH\e[31m■\e[m' "${block[0]}"
 }
 
 draw_snake()
@@ -70,7 +70,7 @@ elif (( x < 1 )); then
 fi
 
 snake="$y;$x"
-printf '\e[%sH\e[1;42m \e[m' "$snake"
+printf '\e[%sH\e[1;32m■\e[m' "$snake"
 
 snakeHist+=("$snake")
 if (( len < ${i:=1} )); then
