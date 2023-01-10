@@ -1,6 +1,8 @@
 # snake
 A super minimal TUI snake game written in pure BASH v5.1+
 
+![snake gif](./snake.gif)
+
 ## Install
 ```bash
 git clone https://github.com/wick3dr0se/snake && cd ${_##*/}
