@@ -8,7 +8,7 @@ shopt -s nocasematch
 
 init()
 {
-len=3 speed=25
+len=3 sec=1.5 speed=25
 init_term
 ((y=rows/2)); ((x=COLUMNS/2))
 }
@@ -25,15 +25,14 @@ end(){ printf '\e[?1049l\e[?25h'&& exit; }
 
 read_keys()
 {
-read -rsn1 -t"${foo:=1.5}"
+read -rsn1 -t"$sec"
 [[ $REPLY == $'\e' ]]&& read -rsn2
 key="${REPLY:=${key:-K}}"
 
-case $1 in
-  [1-9]) foo=".0$1";;
-  10) foo=".${1}";;
-  1[1-9]) foo=".${1#1}";;
-  2[0-4]) foo="1.${1#2}";;
+case $speed in
+  [1-9]) sec="0.0$speed";;
+  1[1-9]) sec="0.${speed#1}";;
+  2[0-4]) sec="1.${speed#2}";;
 esac
 }
 
@@ -54,7 +53,7 @@ elif (( blockX < 1 )); then
 fi
 
 block="$blockY;$blockX"
-printf '\e[%sH\e[31m■\e[m' "${block[0]}"
+printf '\e[%sH\e[1;31m■\e[m' "$block"
 }
 
 draw_snake()
@@ -73,7 +72,7 @@ snake="$y;$x"
 printf '\e[%sH\e[1;32m■\e[m' "$snake"
 
 snakeHist+=("$snake")
-if (( len < ${i:=1} )); then
+if (( len <= ${i:=0} )); then
   printf '\e[%sH \e[m' "${snakeHist[0]}"
   snakeHist=("${snakeHist[@]:1}")
 else ((++i)); fi
@@ -81,8 +80,8 @@ else ((++i)); fi
 
 hud()
 {
-printf '\e[%dH\e[2K\e[40;1;32msnake\e[m Y:%d X:%d | length:%d speed:%d' \
-  "$LINES" "$y" "$x" "$len" "$speed"
+printf '\e[%dH\e[2K\e[1;44msnake\e[m Y:%d X:%d | Delay:%ss Eaten:%d' \
+  "$LINES" "$y" "$x" "$sec" "$((len-3))"
 }
 
 trap end 2
@@ -90,7 +89,7 @@ trap 'init_term; rand_block; hud' 28
 
 init; rand_block; hud
 for((;;)){
-  read_keys "$speed"|| return
+  read_keys|| return
   case $key in
     H|\[D) ((x--));;
     J|\[B) ((y++));;
@@ -108,6 +107,5 @@ for((;;)){
     ((len++))
     (( speed > 0 ))&& ((speed--))
   }
-
   hud
 }
