@@ -11,6 +11,14 @@
 </div>
 
 ## Install
+To try it out without installing anything
+
+```sh
+$ bash <(curl -s https://raw.githubusercontent.com/wick3dr0se/snake/main/snake.sh)
+```
+
+To install it to your machine run
+
 ```ocaml
 $ git clone https://github.com/wick3dr0se/snake && cd ${_##*/}
 $ sudo make install
