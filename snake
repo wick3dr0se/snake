@@ -4,9 +4,11 @@ stty -echo
 
 shopt -s checkwinsize; (:;:)
 
+trap 'end' 2
+
 read_keys(){
-  read -rsn1
-  [[ $REPLY == $'\e' ]]&& read -rsn2
+  read -rsn1 -t "$1"
+  [[ $REPLY == $'\e' ]]&& read -rsn2 -t "$1"
   KEY=${REPLY:=${KEY:-K}}
 }
 
@@ -25,23 +27,17 @@ CENTER="$snakeY;$snakeX"
 
 printf '\e[?1049h\e[2J\e[?25l'
 for((;;)){
-  read_keys
+  read_keys .5
   case ${KEY^^} in
     Q) end;;
-    H|\[D) ((snakeX--));;
-    2|\[B) ((snakeY++));;
-    K|\[A) ((snakeY--));;
-    L|\[C) ((snakeX++));;
+    H|A|\[D) ((snakeX--));; J|S|\[B) ((snakeY++));;
+    K|W|\[A) ((snakeY--));; L|D|\[C) ((snakeX++));;
   esac
 
-  if (( snakeX < 1 )); then
-    snakeX="$COLUMNS"
-  elif (( snakeX > COLUMNS )); then
-    snakeX=1
-  elif (( snakeY < 1 )); then
-    snakeY="$LINES"
-  elif (( snakeY > LINES )); then
-    snakeY=1
+  if (( snakeX < 1 )); then snakeX="$COLUMNS"
+  elif (( snakeX > COLUMNS )); then snakeX=1
+  elif (( snakeY < 1 )); then snakeY="$LINES"
+  elif (( snakeY > LINES )); then snakeY=1
   fi
 
   snake+=("$snakeY;$snakeX")
@@ -52,10 +48,7 @@ for((;;)){
     snake=("${snake[@]:1}")
 
     for _ in "${snake[@]::2}"; do
-      [[ $_ == ${snake[-1]} ]]&&{
-        for _ in {0..5}; do game_over; done
-        end
-      }
+      [[ $_ == ${snake[-1]} ]]&&{ for _ in {0..5}; do game_over; done; end; }
     done
   else ((i++))
   fi
