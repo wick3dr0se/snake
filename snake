@@ -1,0 +1,62 @@
+#!/bin/bash
+
+stty -echo
+
+shopt -s checkwinsize; (:;:)
+
+read_keys(){
+  read -rsn1
+  [[ $REPLY == $'\e' ]]&& read -rsn2
+  KEY=${REPLY:=${KEY:-K}}
+}
+
+game_over(){
+  for _ in 1 7; do
+    printf '\e[%sH\e[3D\e[3%dmGAME OVER\e[m' "$CENTER" "$_"
+    sleep .1
+  done
+}
+
+end(){ printf '\e[?1049l\e[?25h'; stty echo; exit "${1:-0}"; }
+
+len=3
+((snakeX=COLUMNS/2)); ((snakeY=LINES/2))
+CENTER="$snakeY;$snakeX"
+
+printf '\e[?1049h\e[2J\e[?25l'
+for((;;)){
+  read_keys
+  case ${KEY^^} in
+    Q) end;;
+    H|\[D) ((snakeX--));;
+    2|\[B) ((snakeY++));;
+    K|\[A) ((snakeY--));;
+    L|\[C) ((snakeX++));;
+  esac
+
+  if (( snakeX < 1 )); then
+    snakeX="$COLUMNS"
+  elif (( snakeX > COLUMNS )); then
+    snakeX=1
+  elif (( snakeY < 1 )); then
+    snakeY="$LINES"
+  elif (( snakeY > LINES )); then
+    snakeY=1
+  fi
+
+  snake+=("$snakeY;$snakeX")
+  printf '\e[%sH\e[42m \e[m' "${snake[-1]}"
+
+  if (( ${i:=0} >= len )); then
+    printf '\e[%sH \e[m' "${snake[0]}"
+    snake=("${snake[@]:1}")
+
+    for _ in "${snake[@]::2}"; do
+      [[ $_ == ${snake[-1]} ]]&&{
+        for _ in {0..5}; do game_over; done
+        end
+      }
+    done
+  else ((i++))
+  fi
+}
