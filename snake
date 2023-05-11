@@ -7,8 +7,8 @@ trap init_term WINCH
 
 init_term(){
   shopt -s checkwinsize; (:;:)
-  
-  ((snakeX=COLUMNS/2)); ((snakeY=LINES/2))
+  ((ROWS=LINES-1))
+  ((snakeX=COLUMNS/2)); ((snakeY=ROWS/2))
   CENTER="$snakeY;$snakeX"
   
   printf '\e[?1049h\e[2J\e[?25l'
@@ -30,7 +30,7 @@ read_keys() {
 }
 
 rand_block(){
-  ((blockX=SRANDOM%COLUMNS+1)); ((blockY=SRANDOM%LINES+1))
+  ((blockX=SRANDOM%COLUMNS+1)); ((blockY=SRANDOM%ROWS+1))
   block="$blockY;$blockX"
 
   printf '\e[%sH\e[41m \e[m' "$block"
@@ -43,12 +43,19 @@ game_over(){
   done
 }
 
+status_bar(){
+  printf '\e[999H\e[2K\e[1;44;30mSnake\e[m x:%d y:%d len:%d spe:%d' \
+    "$1" "$2" "$3" "$4"
+}
+
 end(){ stty echo; printf '\e[?1049l\e[?25h'; exit "$1"; }
 
 len=3
 
 init_term
 for((;;)){
+  status_bar "$snakeX" "$snakeY" "$len" "$speed"
+
   read_keys "${speed:=20}"
   case ${KEY:-L} in
     Q) end 0;;
@@ -59,8 +66,8 @@ for((;;)){
 
   if (( snakeX < 1 )); then snakeX="$COLUMNS"
   elif (( snakeX > COLUMNS )); then snakeX=1
-  elif (( snakeY < 1 )); then snakeY="$LINES"
-  elif (( snakeY > LINES )); then snakeY=1
+  elif (( snakeY < 1 )); then snakeY="$ROWS"
+  elif (( snakeY > ROWS )); then snakeY=1
   fi
 
   snake+=("$snakeY;$snakeX")
