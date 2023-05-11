@@ -2,9 +2,17 @@
 
 stty -echo
 
-shopt -s checkwinsize; (:;:)
-
 trap 'end 130' EXIT INT
+trap init_term WINCH
+
+init_term(){
+  shopt -s checkwinsize; (:;:)
+  
+  ((snakeX=COLUMNS/2)); ((snakeY=LINES/2))
+  CENTER="$snakeY;$snakeX"
+  
+  printf '\e[?1049h\e[2J\e[?25l'
+}
 
 read_keys() {
   while read -rsn1 -t "$1"; do
@@ -27,18 +35,14 @@ end(){
 }
 
 len=3
-((snakeX=COLUMNS/2)); ((snakeY=LINES/2))
-CENTER="$snakeY;$snakeX"
 
-printf '\e[?1049h\e[2J\e[?25l'
+init_term
 for((;;)){
   read_keys .5
   case ${KEY:-L} in
     Q) end;;
-    H|A|\[D) ((snakeX--));;
-    J|S|\[B) ((snakeY++));;
-    K|W|\[A) ((snakeY--));;
-    L|D|\[C) ((snakeX++));;
+    H|A|\[D) ((snakeX--));; J|S|\[B) ((snakeY++));;
+    K|W|\[A) ((snakeY--));; L|D|\[C) ((snakeX++));;
     *) continue;;
   esac
 
@@ -61,5 +65,3 @@ for((;;)){
   else ((i++))
   fi
 }
-
-stty echo
