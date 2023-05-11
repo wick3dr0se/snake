@@ -16,8 +16,15 @@ init_term(){
 }
 
 read_keys() {
-  while read -rsn1 -t "$1"; do
-    [[ $REPLY == $'\e' ]]&& read -rsn2 -t "$1"
+  case $1 in
+    20) n=1;;
+    1[1-9]) n=".${1#[1-9]}";;
+    10) n='.095';;
+    [1-9]) n=".0$1";;
+  esac
+
+  while read -rsn1 -t "$n"; do
+    [[ $REPLY == $'\e' ]]&& read -rsn2 -t "$n"
     KEY="${REPLY^^}"
   done
 }
@@ -46,7 +53,7 @@ len=3
 
 init_term
 for((;;)){
-  read_keys .1
+  read_keys "${speed:=20}"
   case ${KEY:-L} in
     Q) end;;
     H|A|\[D) ((snakeX--));; J|S|\[B) ((snakeY++));;
@@ -70,7 +77,7 @@ for((;;)){
 
     
     for _ in "${snake[@]::$snakeBodyCount}"; do
-      [[ $_ == $block ]]&&{ ((len++)); rand_block; }
+      [[ $_ == $block ]]&&{ (( speed ))&& ((speed--)); ((len++)); rand_block; }
       [[ $_ == ${snake[-1]} ]]&&{ for _ in {0..5}; do game_over; done; end; }
     done
   else ((i++))
