@@ -58,8 +58,10 @@ for((;;)){
   read_keys "${speed:=20}"
   case ${KEY:-L} in
     Q) end 0;;
-    H|A|\[D) ((snakeX--));; J|S|\[B) ((snakeY++));;
-    K|W|\[A) ((snakeY--));; L|D|\[C) ((snakeX++));;
+    H|A|\[D) [[ $dir == H ]]&& continue; ((snakeX--))&& dir=L;;
+    J|S|\[B) [[ $dir == J ]]&& continue; ((snakeY++))&& dir=K;;
+    K|W|\[A) [[ $dir == K ]]&& continue; ((snakeY--))&& dir=J;;
+    L|D|\[C) [[ $dir == L ]]&& continue; ((snakeX++))&& dir=H;;
     *) continue;;
   esac
 
