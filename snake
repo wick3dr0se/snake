@@ -32,7 +32,7 @@ rand_block(){
   ((blockX=SRANDOM%COLUMNS+1)); ((blockY=SRANDOM%ROWS+1))
   block="$blockY;$blockX"
 
-  printf '\e[%sH\e[41m \e[m' "$block"
+  printf '\e[%sH\e[31m■\e[m' "$block"
 }
 
 game_over(){
@@ -43,7 +43,7 @@ game_over(){
 }
 
 status_bar(){
-  printf '\e[999H\e[2K\e[1;44;30mSnake\e[m x:%d y:%d len:%d spe:%d' \
+  printf '\e[999H\e[2K\e[1;32mSNAKE\e[m x:%d y:%d len:%d spe:%d' \
     "$1" "$2" "$3" "$4"
 }
 
@@ -70,7 +70,7 @@ for((;;)){
   fi
 
   snake+=("$snakeY;$snakeX")
-  printf '\e[%sH\e[42m \e[m' "${snake[-1]}"
+  printf '\e[%sH\e[32m■\e[m' "${snake[-1]}"
 
   if (( ${i:=0} >= len )); then
     printf '\e[%sH \e[m' "${snake[0]}"
