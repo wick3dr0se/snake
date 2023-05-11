@@ -4,12 +4,13 @@ stty -echo
 
 shopt -s checkwinsize; (:;:)
 
-trap 'end' 2
+trap 'end 130' EXIT INT
 
-read_keys(){
-  read -rsn1 -t "$1"
-  [[ $REPLY == $'\e' ]]&& read -rsn2 -t "$1"
-  KEY=${REPLY:=${KEY:-K}}
+read_keys() {
+  while read -rsn1 -t "$1"; do
+    [[ $REPLY == $'\e' ]]&& read -rsn2 -t "$1"
+    KEY="${REPLY^^}"
+  done
 }
 
 game_over(){
@@ -19,7 +20,11 @@ game_over(){
   done
 }
 
-end(){ printf '\e[?1049l\e[?25h'; stty echo; exit "${1:-0}"; }
+end(){
+  stty echo
+  printf '\e[?1049l\e[?25h'
+  exit "${1:-0}"
+}
 
 len=3
 ((snakeX=COLUMNS/2)); ((snakeY=LINES/2))
@@ -28,10 +33,13 @@ CENTER="$snakeY;$snakeX"
 printf '\e[?1049h\e[2J\e[?25l'
 for((;;)){
   read_keys .5
-  case ${KEY^^} in
+  case ${KEY:-L} in
     Q) end;;
-    H|A|\[D) ((snakeX--));; J|S|\[B) ((snakeY++));;
-    K|W|\[A) ((snakeY--));; L|D|\[C) ((snakeX++));;
+    H|A|\[D) ((snakeX--));;
+    J|S|\[B) ((snakeY++));;
+    K|W|\[A) ((snakeY--));;
+    L|D|\[C) ((snakeX++));;
+    *) continue;;
   esac
 
   if (( snakeX < 1 )); then snakeX="$COLUMNS"
@@ -53,3 +61,5 @@ for((;;)){
   else ((i++))
   fi
 }
+
+stty echo
