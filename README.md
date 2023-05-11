@@ -1,46 +1,38 @@
 <div align="center">
-<h1>snake</h1>
-<p>A super minimal TUI snake game written in pure BASH v5.1+</p>
-<img src="https://img.shields.io/github/license/wick3dr0se/snake?style=flat-square&logo=license">
+<h1><code>snake</code></h1>
+<p>A super minimal TUI, classic snake implementation written in pure BASH v5.1+</p>
 <img src="https://shields.io/badge/made-with%20%20bash-green?style=flat-square&color=d5c4a1&labelColor=1d2021&logo=gnu-bash">
-<img src="https://img.shields.io/github/forks/wick3dr0se/snake?style=flat-square">
-<img src="https://img.shields.io/github/stars/wick3dr0se/snake?style=flat-square">
-<br>
-<br>
+<img src=https://img.shields.io/badge/Maintained%3F-yes-green.svg></img>  
+<a href="https://discord.gg/W4mQqNnfSq">
+<img src="https://discordapp.com/api/guilds/913584348937207839/widget.png?style=shield"/></a>
 <img src="./snake.gif">
 </div>
 
 ## Install
-To try it out without installing anything
-
-```sh
-$ bash <(curl -s https://raw.githubusercontent.com/wick3dr0se/snake/main/snake.sh)
+stream `snake` without downloading/installing
+```bash
+bash <(curl -s https://raw.githubusercontent.com/wick3dr0se/snake/main/snake)
 ```
 
-To install it to your machine run
+otherwise, download
+```bash
+git clone https://github.com/wick3dr0se/snake; cd snake
+```
 
-```ocaml
-$ git clone https://github.com/wick3dr0se/snake && cd ${_##*/}
-$ sudo make install
+install to $PATH (optional)
+```bash
+cp snake /usr/local/bin
 ```
 
 ## Usage
-```bash
-# if installed to path.
-$ snake
-# if it's not installed to path.
-$ bash snake
-```
+if installed to $PATH `snake`, otherwise `./snake` or `bash snake`
 
-## Controls
-arrow keys, or:
+## Interface Controls
+arrow keys, or:  
+`H`, `A` - move left  
+`J`, `S` - move down   
+`K`, `W` - move up  
+`L`, `D` - move right
 
-H - move left  
-J - move down  
-K - move up  
-L - move right
-
-R - restart  
-Q - quit
-
+`Q` - quit  
 any other key pauses
