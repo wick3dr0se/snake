@@ -43,11 +43,7 @@ game_over(){
   done
 }
 
-end(){
-  stty echo
-  printf '\e[?1049l\e[?25h'
-  exit "${1:-0}"
-}
+end(){ stty echo; printf '\e[?1049l\e[?25h'; exit "$1"; }
 
 len=3
 
@@ -55,7 +51,7 @@ init_term
 for((;;)){
   read_keys "${speed:=20}"
   case ${KEY:-L} in
-    Q) end;;
+    Q) end 0;;
     H|A|\[D) ((snakeX--));; J|S|\[B) ((snakeY++));;
     K|W|\[A) ((snakeY--));; L|D|\[C) ((snakeX++));;
     *) continue;;
@@ -75,10 +71,9 @@ for((;;)){
     snake=("${snake[@]:1}")
     ((snakeBodyCount=${#snake[@]}-1))
 
-    
     for _ in "${snake[@]::$snakeBodyCount}"; do
-      [[ $_ == $block ]]&&{ (( speed ))&& ((speed--)); ((len++)); rand_block; }
-      [[ $_ == ${snake[-1]} ]]&&{ for _ in {0..5}; do game_over; done; end; }
+      [[ $_ == "$block" ]]&&{ (( speed ))&& ((speed--)); ((len++)); rand_block; }
+      [[ $_ == "${snake[-1]}" ]]&&{ for _ in {0..5}; do game_over; done; end 1; }
     done
   else ((i++))
   fi
