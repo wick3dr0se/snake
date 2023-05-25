@@ -58,12 +58,14 @@ for((;;)){
   read_keys "${speed:=20}"
   case ${KEY:-L} in
     Q) end 0;;
-    H|A|\[D) [[ $dir == H ]]&& continue; ((snakeX--))&& dir=L;;
-    J|S|\[B) [[ $dir == J ]]&& continue; ((snakeY++))&& dir=K;;
-    K|W|\[A) [[ $dir == K ]]&& continue; ((snakeY--))&& dir=J;;
-    L|D|\[C) [[ $dir == L ]]&& continue; ((snakeX++))&& dir=H;;
+    H|A|\[D) (( dirX == 1 ))||{ dirX=-1 dirY=0; };;
+    J|S|\[B) (( dirY == -1 ))||{ dirX=0 dirY=1; };;
+    K|W|\[A) (( dirY == 1 ))||{ dirX=0 dirY=-1; };;
+    L|D|\[C) (( dirX == -1 ))||{ dirX=1 dirY=0; };;
     *) continue;;
   esac
+
+  ((snakeX+=dirX)); ((snakeY+=dirY))
 
   if (( snakeX < 1 )); then snakeX="$COLUMNS"
   elif (( snakeX > COLUMNS )); then snakeX=1
