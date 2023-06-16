@@ -36,10 +36,14 @@ rand_block(){
   printf '\e[%sH\e[41m \e[m' "$block"
 }
 
+wall_collision(){
+  (( snakeX < 1 ))|| (( snakeX > COLUMNS ))|| (( snakeY < 1 ))|| (( snakeY > LINES ))&&
+    { for _ in {0..5}; do game_over; done; end 1; }
+}
+
 game_over(){
   for _ in 1 7; do
-    printf '\e[%sH\e[3D\e[3%dmGAME OVER\e[m' "$CENTER" "$_"
-    sleep .1
+    printf '\e[%sH\e[3D\e[3%dmGAME OVER\e[m' "$CENTER" "$_"; sleep .1
   done
 }
 
@@ -68,11 +72,7 @@ for((;;)){
 
   ((snakeX+=dirX)); ((snakeY+=dirY))
 
-  if (( snakeX < 1 )); then snakeX="$COLUMNS"
-  elif (( snakeX > COLUMNS )); then snakeX=1
-  elif (( snakeY < 1 )); then snakeY="$ROWS"
-  elif (( snakeY > ROWS )); then snakeY=1
-  fi
+  wall_collision
 
   snake+=("$snakeY;$snakeX")
   printf '\e[%sH\e[42m \e[m' "${snake[-1]}"
