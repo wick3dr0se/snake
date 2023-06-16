@@ -6,11 +6,12 @@ trap 'end 130' EXIT INT
 trap init_term WINCH
 
 init_term(){
-  IFS='[;' read -sp $'\e[999;999H\e[6n' -d R -rs _ LINES COLUMNS
+  shopt -s checkwinsize; (:;:)
+
   ((ROWS=LINES-1))
   ((snakeX=COLUMNS/2)); ((snakeY=ROWS/2))
   CENTER="$snakeY;$snakeX"
-  
+ 
   printf '\e[?1049h\e[2J\e[?25l'
   rand_block
 }
