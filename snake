@@ -7,16 +7,24 @@ trap init_term WINCH
 
 init_term(){
   shopt -s checkwinsize; (:;:)
-
+  
   ((ROWS=LINES-1))
   ((snakeX=COLUMNS/2)); ((snakeY=ROWS/2))
   CENTER="$snakeY;$snakeX"
- 
+  
   printf '\e[?1049h\e[2J\e[?25l'
   rand_block
 }
 
+end(){
+  stty echo
+  printf '\e[?1049l\e[?25h'
+
+  exit "${1:-0}"
+}
+
 read_keys() {
+  local n
   case $1 in
     20) n=.7;; 19) n=.6;; 18) n=.5;; 17) n=.4;; 16) n=.3;; 15) n=.2;; 14)n=.1;;
     13) n=.09;; 12) n=.08;; 11) n=.075;; 10) n=.07;; 9) n=.065;; 8) n=.06;; 7) n=.055;;
@@ -37,22 +45,28 @@ rand_block(){
 }
 
 wall_collision(){
-  (( snakeX < 1 ))|| (( snakeX > COLUMNS ))|| (( snakeY < 1 ))|| (( snakeY > LINES ))&&
-    { for _ in {0..5}; do game_over; done; end 1; }
+  (( snakeX < 1 ))|| (( snakeX > COLUMNS ))|| (( snakeY < 1 ))|| (( snakeY > ROWS ))&&
+    game_over 4 1
 }
 
 game_over(){
-  for _ in 1 7; do
-    printf '\e[%sH\e[3D\e[3%dmGAME OVER\e[m' "$CENTER" "$_"; sleep .1
+  local i
+  until (( i > $1 )); do
+    for _ in 1 7; do
+      printf '\e[%sH\e[3D\e[3%dmGAME OVER\e[m' "$CENTER" "$_"
+      sleep .1
+    done
+
+    ((++i))
   done
+
+  end "$2"
 }
 
 status_bar(){
   printf '\e[999H\e[2K\e[1;32mSNAKE\e[m x:%d y:%d len:%d spe:%d' \
     "$1" "$2" "$3" "$4"
 }
-
-end(){ stty echo; printf '\e[?1049l\e[?25h'; exit "$1"; }
 
 len=3
 
@@ -62,14 +76,12 @@ for((;;)){
 
   read_keys "${speed:=20}"
   case ${KEY:-L} in
-    Q) end 0;;
+    Q) game_over 2;;
     H|A|\[D) (( dirX == 1 ))||{ dirX=-1 dirY=0; };;
     J|S|\[B) (( dirY == -1 ))||{ dirX=0 dirY=1; };;
     K|W|\[A) (( dirY == 1 ))||{ dirX=0 dirY=-1; };;
     L|D|\[C) (( dirX == -1 ))||{ dirX=1 dirY=0; };;
-    *) continue;;
   esac
-
   ((snakeX+=dirX)); ((snakeY+=dirY))
 
   wall_collision
@@ -84,8 +96,7 @@ for((;;)){
 
     for _ in "${snake[@]::$snakeBodyCount}"; do
       [[ $_ == "$block" ]]&&{ (( speed ))&& ((speed--)); ((len++)); rand_block; }
-      [[ $_ == "${snake[-1]}" ]]&&{ for _ in {0..5}; do game_over; done; end 1; }
+      [[ $_ == "${snake[-1]}" ]]&& game_over 4 1
     done
-  else ((i++))
-  fi
+  else ((i++)); fi
 }
