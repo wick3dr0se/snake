@@ -5,8 +5,7 @@ stty -echo
 trap 'end 130' EXIT INT; trap init_term WINCH
 
 init_term(){
-  shopt -s checkwinsize; (:;:)
-  
+  shopt -s checkwinsize; (:;:) 
   ((ROWS=LINES-1)); ((snakeX=COLUMNS/2)); ((snakeY=ROWS/2))
   CENTER="$snakeY;$snakeX"
   
@@ -25,13 +24,10 @@ game_over(){
   local i
   until (( i > $1 )); do
     for _ in 1 7; do
-      printf '\e[%sH\e[3D\e[3%dmGAME OVER\e[m' "$CENTER" "$_" \
+      printf '\e[%sH\e[3D\e[3%dmGAME OVER\e[m' "$CENTER" "$_"
       sleep .1
-    done
-    ((++i))
-  done
-
-  end "$2"
+    done; ((++i))
+  done; end "$2"
 }
 
 read_keys() {
@@ -48,16 +44,15 @@ read_keys() {
 }
 
 status_bar(){
-  printf '\e[999H\e[2K\e[1;32mSNAKE\e[m x:%d y:%d len:%d spe:%d' \
-    "$1" "$2" "$3" "$4"
+  printf '\e[999H\e[2K\e[1;32mSNAKE\e[m x:%d y:%d len:%d spe:%d' "$1" "$2" "$3" "$4"
 }
 
 rand_block(){
-  ((blockX=SRANDOM%COLUMNS+1)); ((blockY=SRANDOM%ROWS+1))
-  block="$blockY;$blockX"
-
+  ((blockX=SRANDOM%COLUMNS+1)); ((blockY=SRANDOM%ROWS+1)); block="$blockY;$blockX"
   printf '\e[%sH\e[41m \e[m' "$block"
 }
+
+draw_snake(){ snake+=("$2;$1"); printf '\e[%sH\e[42m \e[m' "${snake[-1]}"; }
 
 wall_collision(){
   (( $1 < 1 ))|| (( $1 > COLUMNS ))|| (( $2 < 1 ))|| (( $2 > ROWS ))&& game_over 4 1
@@ -78,18 +73,16 @@ for((;;)){
     L|D|\[C) (( dirX == -1 ))||{ dirX=1 dirY=0; };;
   esac; ((snakeX+=dirX)); ((snakeY+=dirY))
 
-  wall_collision "$snakeX" "$snakeY"
+  draw_snake "$snakeX" "$snakeY"
 
-  snake+=("$snakeY;$snakeX")
-  printf '\e[%sH\e[42m \e[m' "${snake[-1]}"
+  wall_collision "$snakeX" "$snakeY"
 
   if (( ${i:=0} >= len )); then
     printf '\e[%sH \e[m' "${snake[0]}"
-    snake=("${snake[@]:1}")
-    ((snakeBodyCount=${#snake[@]}-1))
+    snake=("${snake[@]:1}"); ((snakeBodyCount=${#snake[@]}-1))
 
     for _ in "${snake[@]::$snakeBodyCount}"; do
-      [[ $_ == "$block" ]]&&{ (( speed ))&& ((speed--)); ((len++)); rand_block; }
+      [[ $_ == "$block" ]]&&{ ((speed--)); ((len++)); rand_block; }
       [[ $_ == "${snake[-1]}" ]]&& game_over 4 1
     done
   else ((i++)); fi
