@@ -1,23 +1,19 @@
 #!/bin/bash
 
 stty -echo
-
 trap 'end 130' EXIT INT; trap init_term WINCH
+
+skip(){ if (( ${n:=1} > ${1:-1} )); then :; else ((n++)); false; fi; }
 
 init_term(){
   IFS='[;' read -sp $'\e[999;999H\e[6n' -d R -rs _ LINES COLS
   ((ROWS=LINES-1)); ((snakeX=COLS/2)); ((snakeY=ROWS/2)); CENTER="$snakeY;$snakeX"
-  
+
   printf '\e[?1049h\e[2J\e[?25l\e[?7l'
   rand_block
 }
 
-end(){
-  stty echo
-  printf '\e[?1049l\e[?25h\e[?7h'
-
-  exit "${1:-0}"
-}
+end(){ stty echo; printf '\e[?1049l\e[?25h\e[?7h'; exit "${1:-0}"; }
 
 game_over(){
   local i
@@ -63,25 +59,29 @@ snake_direction(){
 
 draw_snake(){ snake+=("$2;$1"); printf '\e[%sH\e[42m \e[m' "${snake[-1]}"; }
 
+erase_snake(){ printf '\e[%sH \e[m' "${snake[0]}"; snake=("${snake[@]:1}"); }
+
+consume_block(){ [[ $1 == "$block" ]]&&{ ((delay--)); ((len++)); rand_block; }; }
+
+self_collision(){ [[ $1 == "${snake[-1]}" ]]&& game_over 4 1; }
+
 wall_collision(){ (( $1 < 1|| $1 > COLS|| $2 < 1|| $2 > ROWS ))&& game_over 4 1; }
 
-len=3 speed=20
-
+len=3 delay=20
 init_term
 for((;;)){
-  status_bar "$snakeX" "$snakeY" "$len" "$speed"
-  read_keys "$speed"
-  snake_direction L
-  draw_snake "$snakeX" "$snakeY"
+  status_bar "$snakeX" "$snakeY" "$len" "$delay"
+  read_keys "$delay"
+  snake_direction L; draw_snake "$snakeX" "$snakeY"
   wall_collision "$snakeX" "$snakeY"
 
-  if (( ${i:=0} >= len )); then
-    printf '\e[%sH \e[m' "${snake[0]}"
-    snake=("${snake[@]:1}"); ((snakeBodyCount=${#snake[@]}-1))
+  skip "$len"&&{
+    erase_snake
 
+    ((snakeBodyCount=${#snake[@]}-1))
     for _ in "${snake[@]::$snakeBodyCount}"; do
-      [[ $_ == "$block" ]]&&{ ((speed--)); ((len++)); rand_block; }
-      [[ $_ == "${snake[-1]}" ]]&& game_over 4 1
+      consume_block "$_"
+      self_collision "$_"
     done
-  else ((i++)); fi
+  }
 }
