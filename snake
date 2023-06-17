@@ -8,32 +8,30 @@ trap init_term WINCH
 init_term(){
   shopt -s checkwinsize; (:;:)
   
-  ((ROWS=LINES-1))
-  ((snakeX=COLUMNS/2)); ((snakeY=ROWS/2))
+  ((ROWS=LINES-1)); ((snakeX=COLUMNS/2)); ((snakeY=ROWS/2))
   CENTER="$snakeY;$snakeX"
   
-  printf '\e[?1049h\e[2J\e[?25l'
+  printf '\e[?1049h\e[2J\e[?25l\e[?7l'
   rand_block
 }
 
 end(){
   stty echo
-  printf '\e[?1049l\e[?25h'
+  printf '\e[?1049l\e[?25h\e[?7h'
 
   exit "${1:-0}"
 }
 
 read_keys() {
-  local n
+  local i
   case $1 in
-    20) n=.7;; 19) n=.6;; 18) n=.5;; 17) n=.4;; 16) n=.3;; 15) n=.2;; 14)n=.1;;
-    13) n=.09;; 12) n=.08;; 11) n=.075;; 10) n=.07;; 9) n=.065;; 8) n=.06;; 7) n=.055;;
-    6) n=.05;; 5) n=.045;; 4) n=.04;; 3) n=.035;; 2) n=.03;; 1) n=.025;;
+    20) i=.7;; 19) i=.6;; 18) i=.5;; 17) i=.4;; 16) i=.3;; 15) i=.2;; 14) i=.1;;
+    13) i=.09;; 12) i=.08;; 11) i=.075;; 10) i=.07;; 9) i=.065;; 8) i=.06;; 7) i=.055;;
+    6) i=.05;; 5) i=.045;; 4) i=.04;; 3) i=.035;; 2) i=.03;; 1) i=.025;;
   esac
 
-  while read -rsn1 -t "$n"; do
-    [[ $REPLY == $'\e' ]]&& read -rsn2 -t "$n"
-    KEY="${REPLY^^}"
+  while read -rsn1 -t "$i"; do
+    [[ $REPLY == $'\e' ]]&& read -rsn2 -t "$i"; KEY="${REPLY^^}"
   done
 }
 
@@ -56,7 +54,6 @@ game_over(){
       printf '\e[%sH\e[3D\e[3%dmGAME OVER\e[m' "$CENTER" "$_"
       sleep .1
     done
-
     ((++i))
   done
 
@@ -68,13 +65,13 @@ status_bar(){
     "$1" "$2" "$3" "$4"
 }
 
-len=3
+len=3 speed=20
 
 init_term
 for((;;)){
   status_bar "$snakeX" "$snakeY" "$len" "$speed"
 
-  read_keys "${speed:=20}"
+  read_keys "$speed"
   case ${KEY:-L} in
     Q) game_over 2;;
     H|A|\[D) (( dirX == 1 ))||{ dirX=-1 dirY=0; };;
