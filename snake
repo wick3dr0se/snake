@@ -2,8 +2,7 @@
 
 stty -echo
 
-trap 'end 130' EXIT INT
-trap init_term WINCH
+trap 'end 130' EXIT INT; trap init_term WINCH
 
 init_term(){
   shopt -s checkwinsize; (:;:)
@@ -22,6 +21,19 @@ end(){
   exit "${1:-0}"
 }
 
+game_over(){
+  local i
+  until (( i > $1 )); do
+    for _ in 1 7; do
+      printf '\e[%sH\e[3D\e[3%dmGAME OVER\e[m' "$CENTER" "$_" \
+      sleep .1
+    done
+    ((++i))
+  done
+
+  end "$2"
+}
+
 read_keys() {
   local i
   case $1 in
@@ -35,6 +47,11 @@ read_keys() {
   done
 }
 
+status_bar(){
+  printf '\e[999H\e[2K\e[1;32mSNAKE\e[m x:%d y:%d len:%d spe:%d' \
+    "$1" "$2" "$3" "$4"
+}
+
 rand_block(){
   ((blockX=SRANDOM%COLUMNS+1)); ((blockY=SRANDOM%ROWS+1))
   block="$blockY;$blockX"
@@ -43,26 +60,7 @@ rand_block(){
 }
 
 wall_collision(){
-  (( snakeX < 1 ))|| (( snakeX > COLUMNS ))|| (( snakeY < 1 ))|| (( snakeY > ROWS ))&&
-    game_over 4 1
-}
-
-game_over(){
-  local i
-  until (( i > $1 )); do
-    for _ in 1 7; do
-      printf '\e[%sH\e[3D\e[3%dmGAME OVER\e[m' "$CENTER" "$_"
-      sleep .1
-    done
-    ((++i))
-  done
-
-  end "$2"
-}
-
-status_bar(){
-  printf '\e[999H\e[2K\e[1;32mSNAKE\e[m x:%d y:%d len:%d spe:%d' \
-    "$1" "$2" "$3" "$4"
+  (( $1 < 1 ))|| (( $1 > COLUMNS ))|| (( $2 < 1 ))|| (( $2 > ROWS ))&& game_over 4 1
 }
 
 len=3 speed=20
@@ -78,10 +76,9 @@ for((;;)){
     J|S|\[B) (( dirY == -1 ))||{ dirX=0 dirY=1; };;
     K|W|\[A) (( dirY == 1 ))||{ dirX=0 dirY=-1; };;
     L|D|\[C) (( dirX == -1 ))||{ dirX=1 dirY=0; };;
-  esac
-  ((snakeX+=dirX)); ((snakeY+=dirY))
+  esac; ((snakeX+=dirX)); ((snakeY+=dirY))
 
-  wall_collision
+  wall_collision "$snakeX" "$snakeY"
 
   snake+=("$snakeY;$snakeX")
   printf '\e[%sH\e[42m \e[m' "${snake[-1]}"
