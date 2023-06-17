@@ -5,9 +5,8 @@ stty -echo
 trap 'end 130' EXIT INT; trap init_term WINCH
 
 init_term(){
-  shopt -s checkwinsize; (:;:) 
-  ((ROWS=LINES-1)); ((snakeX=COLUMNS/2)); ((snakeY=ROWS/2))
-  CENTER="$snakeY;$snakeX"
+  IFS='[;' read -sp $'\e[999;999H\e[6n' -d R -rs _ LINES COLS
+  ((ROWS=LINES-1)); ((snakeX=COLS/2)); ((snakeY=ROWS/2)); CENTER="$snakeY;$snakeX"
   
   printf '\e[?1049h\e[2J\e[?25l\e[?7l'
   rand_block
@@ -30,7 +29,7 @@ game_over(){
   done; end "$2"
 }
 
-read_keys() {
+read_keys(){
   local i
   case $1 in
     20) i=.7;; 19) i=.6;; 18) i=.5;; 17) i=.4;; 16) i=.3;; 15) i=.2;; 14) i=.1;;
@@ -48,33 +47,32 @@ status_bar(){
 }
 
 rand_block(){
-  ((blockX=SRANDOM%COLUMNS+1)); ((blockY=SRANDOM%ROWS+1)); block="$blockY;$blockX"
+  ((blockX=SRANDOM%COLS+1)); ((blockY=SRANDOM%ROWS+1)); block="$blockY;$blockX"
   printf '\e[%sH\e[41m \e[m' "$block"
 }
 
-draw_snake(){ snake+=("$2;$1"); printf '\e[%sH\e[42m \e[m' "${snake[-1]}"; }
-
-wall_collision(){
-  (( $1 < 1 ))|| (( $1 > COLUMNS ))|| (( $2 < 1 ))|| (( $2 > ROWS ))&& game_over 4 1
-}
-
-len=3 speed=20
-
-init_term
-for((;;)){
-  status_bar "$snakeX" "$snakeY" "$len" "$speed"
-
-  read_keys "$speed"
-  case ${KEY:-L} in
+snake_direction(){
+  case ${KEY:-$1} in
     Q) game_over 2;;
     H|A|\[D) (( dirX == 1 ))||{ dirX=-1 dirY=0; };;
     J|S|\[B) (( dirY == -1 ))||{ dirX=0 dirY=1; };;
     K|W|\[A) (( dirY == 1 ))||{ dirX=0 dirY=-1; };;
     L|D|\[C) (( dirX == -1 ))||{ dirX=1 dirY=0; };;
   esac; ((snakeX+=dirX)); ((snakeY+=dirY))
+}
 
+draw_snake(){ snake+=("$2;$1"); printf '\e[%sH\e[42m \e[m' "${snake[-1]}"; }
+
+wall_collision(){ (( $1 < 1|| $1 > COLS|| $2 < 1|| $2 > ROWS ))&& game_over 4 1; }
+
+len=3 speed=20
+
+init_term
+for((;;)){
+  status_bar "$snakeX" "$snakeY" "$len" "$speed"
+  read_keys "$speed"
+  snake_direction L
   draw_snake "$snakeX" "$snakeY"
-
   wall_collision "$snakeX" "$snakeY"
 
   if (( ${i:=0} >= len )); then
